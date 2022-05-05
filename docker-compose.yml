@@ -1,0 +1,142 @@
+version: "3"
+services:
+  router1:
+    build: 
+      context: ./router
+      dockerfile: ./router1/Dockerfile
+    container_name: router1
+    hostname: router1
+    networks:
+      - frr-net1
+      - frr-net5
+      - frr-net6
+    privileged: true
+  router2:
+    build: 
+      context: ./router
+      dockerfile: ./router2/Dockerfile
+    container_name: router2
+    hostname: router2
+    networks:
+      - frr-net2
+      - frr-net5
+      - frr-net7
+    privileged: true
+    depends_on:
+      - router1
+  router3:
+    build: 
+      context: ./router
+      dockerfile: ./router3/Dockerfile
+    container_name: router3
+    hostname: router3
+    networks:
+      - frr-net3
+      - frr-net6
+      - frr-net8
+    privileged: true
+    depends_on:
+      - router1
+  router4:
+    build: 
+      context: ./router
+      dockerfile: ./router4/Dockerfile
+    container_name: router4
+    hostname: router4
+    networks:
+      - frr-net4
+      - frr-net7
+      - frr-net8
+    privileged: true
+    depends_on:
+      - router2
+      - router3
+  host1:
+    build: ./host/host1
+    container_name: host1
+    hostname: host1
+    networks:
+      - frr-net1
+    init: true
+    privileged: true
+    depends_on:
+      - router1
+  host2:
+    build: ./host/host2
+    container_name: host2
+    hostname: host2
+    networks:
+      - frr-net2
+    init: true
+    privileged: true
+    depends_on:
+      - router2
+  host3:
+    build: ./host/host3
+    container_name: host3
+    hostname: host3
+    networks:
+      - frr-net3
+    init: true
+    privileged: true
+    depends_on:
+      - router3
+  host4:
+    build: ./host/host4
+    container_name: host4
+    hostname: host4
+    networks:
+      - frr-net4
+    init: true
+    privileged: true
+    depends_on:
+      - router4
+networks:
+  frr-net1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+  frr-net2:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.29.0.0/16
+  frr-net3:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/16
+  frr-net4:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.31.0.0/16
+  frr-net5:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.32.0.0/16
+  frr-net6:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.33.0.0/16
+  frr-net7:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.34.0.0/16
+  frr-net8:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.35.0.0/16
