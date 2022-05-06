@@ -5,6 +5,7 @@ Demonstration of FRR using docker network.
 ## Demonstrations
 
 - [BGP_2as](./bgp_2as/README.md)
+- [BGP_3as](./bgp_3as/README.md)
 
 ## References
 
