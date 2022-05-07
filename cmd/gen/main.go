@@ -6,17 +6,15 @@ import (
 	"github.com/TOMOFUMI-KONDO/frr-demo/gen"
 )
 
-var base string
-var cfg string
+var dir string
 
 func init() {
-	flag.StringVar(&base, "base", ".", "Path of base dir")
-	flag.StringVar(&cfg, "cfg", "hosts.yaml", "Path of hosts config file from base dir")
+	flag.StringVar(&dir, "dir", ".", "Path of dir dir")
 	flag.Parse()
 }
 
 func main() {
-	if err := gen.GenHost(base, cfg); err != nil {
+	if err := gen.Gen(dir); err != nil {
 		panic(err)
 	}
 }

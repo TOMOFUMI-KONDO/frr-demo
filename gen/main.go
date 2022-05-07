@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -10,13 +11,34 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const cfgFile = "config.yaml"
+const tmplDir = "gen/templates"
+
+type tmplKind int
+
+const (
+	tmplHost = iota
+	tmplRouter
+)
+
+func (t tmplKind) String() string {
+	switch t {
+	case tmplHost:
+		return "host"
+	case tmplRouter:
+		return "router"
+	default:
+		panic(fmt.Errorf("unknown tmplKind: %d", t))
+	}
+}
+
 type Template struct {
 	filename string
-	dir      string
+	kind     tmplKind
 }
 
 func (t *Template) path() string {
-	return path.Join(t.dir, t.filename)
+	return path.Join(tmplDir, t.kind.String(), t.filename)
 }
 
 func (t *Template) dstFilename() string {
@@ -29,8 +51,8 @@ func (t *Template) dstFilename() string {
 }
 
 var templates = []Template{
-	{"startup.sh.tmpl", "gen/templates"},
-	{"Dockerfile.tmpl", "gen/templates"},
+	{"startup.sh.tmpl", tmplHost},
+	{"Dockerfile.tmpl", tmplHost},
 }
 
 type Host struct {
@@ -43,14 +65,14 @@ func (h Host) RemovedGateway() string {
 	return h.Gateway[:i] + ".1"
 }
 
-func GenHost(baseDir, cfgPath string) error {
-	cfgFile, err := os.Open(path.Join(baseDir, cfgPath))
+func Gen(baseDir string) error {
+	f, err := os.Open(path.Join(baseDir, cfgFile))
 	if err != nil {
 		return err
 	}
-	defer cfgFile.Close()
+	defer f.Close()
 
-	b, err := io.ReadAll(cfgFile)
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return err
 	}
@@ -63,12 +85,12 @@ func GenHost(baseDir, cfgPath string) error {
 	}
 
 	for _, h := range hosts.Hosts {
-		for _, t := range templates {
-			dir := path.Join(baseDir, h.Name)
-			if err = os.MkdirAll(dir, 0755); err != nil {
-				return err
-			}
+		dir := path.Join(baseDir, "host", h.Name)
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
 
+		for _, t := range templates {
 			dstFile, err := os.Create(path.Join(dir, t.dstFilename()))
 			if err != nil {
 				return err
