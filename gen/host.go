@@ -29,8 +29,8 @@ func (t *Template) dstFilename() string {
 }
 
 var templates = []Template{
-	{"startup.sh.tmpl", "bgp_4as/host"},
-	{"Dockerfile.tmpl", "bgp_4as/host"},
+	{"startup.sh.tmpl", "gen/templates"},
+	{"Dockerfile.tmpl", "gen/templates"},
 }
 
 type Host struct {
@@ -43,41 +43,43 @@ func (h Host) RemovedGateway() string {
 	return h.Gateway[:i] + ".1"
 }
 
-func Gen(cfgPath string) {
-	cfgFile, err := os.Open(cfgPath)
+func GenHost(baseDir, cfgPath string) error {
+	cfgFile, err := os.Open(path.Join(baseDir, cfgPath))
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer cfgFile.Close()
 
 	b, err := io.ReadAll(cfgFile)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	var hosts struct {
 		Hosts []*Host `yaml:"hosts"`
 	}
 	if err = yaml.Unmarshal(b, &hosts); err != nil {
-		panic(err)
+		return err
 	}
 
 	for _, h := range hosts.Hosts {
 		for _, t := range templates {
-			dir := path.Join(t.dir, h.Name)
+			dir := path.Join(baseDir, h.Name)
 			if err = os.MkdirAll(dir, 0755); err != nil {
-				panic(err)
+				return err
 			}
 
 			dstFile, err := os.Create(path.Join(dir, t.dstFilename()))
 			if err != nil {
-				panic(err)
+				return err
 			}
 
 			tmpl := template.Must(template.ParseFiles(t.path()))
-			if err := tmpl.Execute(dstFile, h); err != nil {
-				panic(err)
+			if err = tmpl.Execute(dstFile, h); err != nil {
+				return err
 			}
 		}
 	}
+
+	return nil
 }

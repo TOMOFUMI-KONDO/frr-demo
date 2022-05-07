@@ -1,0 +1,6 @@
+#!/bin/sh
+
+route add default gw {{ .Gateway }}
+route del default gw {{ .RemovedGateway }}
+
+tail -f /dev/null
