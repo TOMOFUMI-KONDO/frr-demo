@@ -1,0 +1,47 @@
+frr version 7.5_git
+frr defaults traditional
+hostname {{ .Name }}
+no ipv6 forwarding
+service integrated-vtysh-config
+!
+interface lo
+ ip address {{ .Lo }}/32
+!
+{{ with .BGP }}
+router bgp {{ .As }}
+ bgp router-id {{ $.Lo }}
+ {{ range .Neighbors }}
+ neighbor {{ .Addr }} remote-as {{ .As }}
+ {{ $addr := .Addr }}{{ with .Weight }}neighbor {{ $addr }} weight {{ . }}{{ end }}
+ {{ end }}
+ !
+ address-family ipv4 unicast
+  network {{ .Network }}
+  {{ range .Neighbors }}
+  neighbor {{ .Addr }} soft-reconfiguration inbound
+  neighbor {{ .Addr }} route-map {{ with .RouteMapIn }} {{ . }} {{ else }} allow-all {{ end }} in
+  neighbor {{ .Addr }} route-map {{ with .RouteMapOut }} {{ . }} {{ else }} allow-all {{ end }} out
+  {{ end }}
+ exit-address-family
+!
+{{ end }}
+{{ range .IpPrefixLists }}
+ip prefix-list {{ .Name }} permit {{ .Cidr }}
+{{ end }}
+ip prefix-list allow-all permit 0.0.0.0/0 le 32
+!
+{{ range .RouteMaps }}
+route-map {{ .Name }} permit 10
+ match ip address prefix-list {{ .MatchPrefixList }}
+!
+route-map {{ .Name }} deny 100
+!
+{{ end }}
+route-map allow-all permit 10
+ match ip address prefix-list allow-all
+!
+route-map allow-all deny 100
+!
+line vty
+!
+

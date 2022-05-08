@@ -9,7 +9,7 @@ import (
 var dir string
 
 func init() {
-	flag.StringVar(&dir, "dir", ".", "Path of dir dir")
+	flag.StringVar(&dir, "dir", ".", "Path of dir")
 	flag.Parse()
 }
 
