@@ -87,12 +87,12 @@ type Router struct {
 	IpPrefixLists []*IpPrefixList `yaml:"ip_prefix_lists,omitempty"`
 	RouteMaps     []*RouteMap     `yaml:"route_maps,omitempty"`
 	BGP           *BGP            `yaml:"bgp,omitempty"`
-	//OSPF         *OSPF           `yaml:"ospf,omitempty"`
+	OSPF          *OSPF           `yaml:"ospf,omitempty"`
 }
 
 type IpPrefixList struct {
-	Name string `yaml:"name"`
-	Cidr string `yaml:"cidr"`
+	Name  string   `yaml:"name"`
+	Cidrs []string `yaml:"cidrs"`
 }
 
 type RouteMap struct {
@@ -101,12 +101,12 @@ type RouteMap struct {
 }
 
 type BGP struct {
-	As        string      `yaml:"as"`
-	Network   string      `yaml:"network"`
-	Neighbors []*Neighbor `yaml:"neighbors"`
+	As        string         `yaml:"as"`
+	Network   string         `yaml:"network"`
+	Neighbors []*BgpNeighbor `yaml:"neighbors"`
 }
 
-type Neighbor struct {
+type BgpNeighbor struct {
 	Addr        string `yaml:"addr"`
 	As          string `yaml:"as"`
 	Weight      string `yaml:"weight,omitempty"`
@@ -114,13 +114,21 @@ type Neighbor struct {
 	RouteMapOut string `yaml:"route_map_out"`
 }
 
+type OSPF struct {
+	Networks []*OspfNetwork `yaml:"networks"`
+}
+
+type OspfNetwork struct {
+	Cidr string `yaml:"cidr"`
+	Area string `yaml:"area,omitempty"`
+}
+
 func (r *Router) Bgpd() bool {
 	return r.BGP != nil
 }
 
 func (r *Router) Ospfd() bool {
-	//return r.OSPF != nil
-	return false
+	return r.OSPF != nil
 }
 
 func Gen(baseDir string) error {

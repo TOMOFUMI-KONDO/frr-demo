@@ -7,6 +7,14 @@ service integrated-vtysh-config
 interface lo
  ip address {{ .Lo }}/32
 !
+{{ with .OSPF }}
+router ospf
+ {{ range .Networks }}
+ network {{ .Cidr }} {{ with .Area }} {{ . }} {{ else }} 0.0.0.0{{ end }}
+ {{ end }}
+ router-info area
+!
+{{ end }}
 {{ with .BGP }}
 router bgp {{ .As }}
  bgp router-id {{ $.Lo }}
@@ -17,17 +25,18 @@ router bgp {{ .As }}
  !
  address-family ipv4 unicast
   network {{ .Network }}
+  {{ if $.OSPF }}redistribute ospf{{ end }}
   {{ range .Neighbors }}
   neighbor {{ .Addr }} soft-reconfiguration inbound
-  neighbor {{ .Addr }} route-map {{ with .RouteMapIn }} {{ . }} {{ else }} allow-all {{ end }} in
-  neighbor {{ .Addr }} route-map {{ with .RouteMapOut }} {{ . }} {{ else }} allow-all {{ end }} out
+  neighbor {{ .Addr }} route-map {{ with .RouteMapIn }} {{ . }} {{ else }} allow-all{{ end }} in
+  neighbor {{ .Addr }} route-map {{ with .RouteMapOut }} {{ . }} {{ else }} allow-all{{ end }} out
   {{ end }}
  exit-address-family
 !
 {{ end }}
-{{ range .IpPrefixLists }}
-ip prefix-list {{ .Name }} permit {{ .Cidr }}
-{{ end }}
+{{ range .IpPrefixLists }}{{ $n := .Name }}{{ range .Cidrs }}
+ip prefix-list {{ $n }} permit {{ . }}
+{{ end }}{{ end }}
 ip prefix-list allow-all permit 0.0.0.0/0 le 32
 !
 {{ range .RouteMaps }}
