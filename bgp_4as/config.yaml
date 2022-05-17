@@ -1,0 +1,62 @@
+hosts:
+  - name: host1
+    gateway: 172.28.0.2
+  - name: host2
+    gateway: 172.29.0.2
+  - name: host3
+    gateway: 172.30.0.2
+  - name: host4
+    gateway: 172.31.0.2
+  - name: host5
+    gateway: 172.36.0.2
+  - name: host6
+    gateway: 172.38.0.2
+  - name: host7
+    gateway: 172.40.0.2
+routers:
+  - name: router1
+    lo: 1.1.1.1
+    ip_prefix_lists:
+      - name: net1
+        cidrs: [ 172.28.0.0/16 ]
+    route_maps:
+      - name: to-rtr2
+        match_prefix_list: net1
+      - name: to-rtr3
+        match_prefix_list: net1
+    bgp:
+      as: 1
+      network: 172.28.0.0/16
+      neighbors:
+        - addr: 172.32.0.3
+          as: 2
+          weight: 100
+          route_map_out: to-rtr2
+        - addr: 172.33.0.3
+          as: 2
+          route_map_out: to-rtr3
+  - name: router2
+    lo: 2.2.2.2
+    ospf:
+      networks:
+        - cidr: 172.29.0.0/16
+        - cidr: 172.32.0.0/16
+        - cidr: 172.34.0.0/16
+    ip_prefix_lists:
+      - name: routes
+        cidrs: [ 172.29.0.0/16, 172.31.0.0/16, 172.36.0.0/16 ]
+    route_maps:
+      - name: to-rtr1
+        match_prefix_list: routes
+      - name: to-rtr4
+        match_prefix_list: allow-all
+    bgp:
+      as: 2
+      network: 172.29.0.0/16
+      neighbors:
+        - addr: 172.32.0.2
+          as: 1
+          route_map_out: to-rtr1
+        - addr: 172.34.0.2
+          as: 2
+          route_map_out: to-rtr4
